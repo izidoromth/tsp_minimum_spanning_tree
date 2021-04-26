@@ -111,18 +111,18 @@ void CriarArestas(vector<Vertice> grafo)
 {
   for(int i = 0; i < grafo.size(); i++)
   {
-    for(int j = 0; j < grafo.size(); j++)
+    for(int j = i+1; j < grafo.size(); j++)
     {
-      if(grafo[i].id == grafo[j].id)
-        continue;
+      Aresta ida;
+      Aresta volta;
 
-      Aresta a;
+      ida.u = volta.v = grafo[i].id;
+      ida.v = volta.u = grafo[j].id;
 
-      a.u = grafo[i].id;
-      a.v = grafo[j].id;
-      a.peso = DistanciaEuclidiana(grafo[i], grafo[j]);
+      ida.peso = volta.peso = DistanciaEuclidiana(grafo[i], grafo[j]);
 
-      grafo[i].adjacencias.push_back(a);
+      grafo[i].adjacencias.push_back(ida);
+      grafo[j].adjacencias.push_back(volta);
     }
   }
 }
