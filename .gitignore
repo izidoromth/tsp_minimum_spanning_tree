@@ -1,1 +1,7 @@
 tsp
+tsp.cpp
+auxiliares/
+genpoints.c
+input.txt
+a.out
+.vscode/
