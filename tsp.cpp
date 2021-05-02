@@ -10,7 +10,7 @@
 
 using namespace std;
 
-const uint INFINITO = 0xFFFFFFFF;
+const float INFINITO = 0xEFFFFFFF;
 
 //variavel para indexar os vértices do grafo
 int ID = 0;
@@ -33,10 +33,11 @@ class Vertice
   public:
   int id;
   int x, y;
-  uint c;
+  int indice_heap;
+  float c;
   Vertice *p;
   vector<Aresta> adjacencias;
-  Vertice(){ id = ID++; x = 0; y = 0; c = INFINITO; p = NULL; }
+  Vertice(){ id = ID++; x = 0; y = 0; c = INFINITO; p = NULL; indice_heap = -1; }
   ~Vertice(){}
 };
 
@@ -53,6 +54,7 @@ vector<Vertice> DesserializarPontos(char* nome_do_arquivo);
 void CriarArestas(vector<Vertice> &grafo);
 float DistanciaEuclidiana(Vertice v1, Vertice v2);
 vector<Vertice> AGMPrim(vector<Vertice> &grafo);
+void EscreveSaidaBP(vector<Vertice> &agm);
 
 //Funcoes Heap
 void InserirHeap(Heap &heap, Vertice &v);
@@ -62,7 +64,7 @@ int Esquerda(int i);
 int Direita(int i);
 int Pai(int i);
 void Heapify(Heap &heap, int i);
-void AtualizarHeap(Heap &heap, int id); 
+void AtualizarHeap(Heap &heap, int id);
 
 int main(int argc, char* argv[]) {
   if(!argv[0])
@@ -81,7 +83,7 @@ int main(int argc, char* argv[]) {
 
   CriarArestas(grafo);
 
-  AGMPrim(grafo);
+  vector<Vertice> agm = AGMPrim(grafo);
 
   return 0;
 }
@@ -182,24 +184,67 @@ vector<Vertice> AGMPrim(vector<Vertice> &grafo)
       {
         grafo[v].c = u->adjacencias[a].peso;
         grafo[v].p = u;
-        int id = -1;
-        for(int i=0; heap.vetor[i]->id != v && i < heap.tamanho; i++)
-          id = i;
-        AtualizarHeap(heap, id);
+        AtualizarHeap(heap, grafo[v].indice_heap);
       }
     }
   }
+
+  vector<Vertice> agm;
+
+  for(int i=0; i < grafo.size(); i++)
+  {
+    Vertice v;
+
+    v.id = grafo[i].id;
+    v.x = grafo[i].x;
+    v.y = grafo[i].y;
+
+    agm.push_back(v);
+  }
+
+  for(int i=0; i < grafo.size(); i++)
+  {
+    if(grafo[i].p != NULL)
+    {
+      Aresta a;
+
+      a.u = (*grafo[i].p).id;
+      a.v = grafo[i].id;
+      a.peso = grafo[i].c;
+
+      agm[i].adjacencias.push_back(a);
+    }
+  }
+
+  cout << "prim done";
+
+  return agm;
+}
+
+
+void EscreveSaidaBP(vector<Vertice*> agm)
+{
+
 }
 
 void InserirHeap(Heap &heap, Vertice &v)
 {
   heap.vetor.push_back(&v);
+  v.indice_heap = heap.tamanho;
   heap.tamanho++;
+  int indice = heap.tamanho - 1;
+  while(indice > 0 && heap.vetor[Pai(indice)]->c > heap.vetor[indice]->c)
+  {
+    InverterVertice(heap, Pai(indice), indice);
+    indice = Pai(indice);
+  }
 }
 
 void InverterVertice(Heap &heap, int i1, int i2)
 {
   Vertice *aux = heap.vetor[i1];
+  aux->indice_heap = i2;
+  heap.vetor[i2]->indice_heap = i1;
   heap.vetor[i1] = heap.vetor[i2];
   heap.vetor[i2] = aux;
 }
@@ -240,7 +285,7 @@ void Heapify(Heap &heap, int i)
   else
     menor = i;
 
-  if(menor < heap.tamanho && heap.vetor[Direita(i)]->c < heap.vetor[menor]->c)
+  if(Direita(i) < heap.tamanho && heap.vetor[Direita(i)]->c < heap.vetor[menor]->c)
     menor = Direita(i);
 
   if(menor != i)
