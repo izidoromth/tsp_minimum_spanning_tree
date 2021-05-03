@@ -5,3 +5,6 @@ genpoints.c
 input.txt
 a.out
 .vscode/
+tree.txt
+tree.plot
+arvore.pdf

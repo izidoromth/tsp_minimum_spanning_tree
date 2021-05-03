@@ -54,6 +54,7 @@ vector<Vertice> DesserializarPontos(char* nome_do_arquivo);
 void CriarArestas(vector<Vertice> &grafo);
 float DistanciaEuclidiana(Vertice v1, Vertice v2);
 vector<Vertice> AGMPrim(vector<Vertice> &grafo);
+void EscreveSaidaPrim(vector<Vertice> &agm);
 void EscreveSaidaBP(vector<Vertice> &agm);
 
 //Funcoes Heap
@@ -84,6 +85,8 @@ int main(int argc, char* argv[]) {
   CriarArestas(grafo);
 
   vector<Vertice> agm = AGMPrim(grafo);
+
+  EscreveSaidaPrim(agm);
 
   return 0;
 }
@@ -206,13 +209,14 @@ vector<Vertice> AGMPrim(vector<Vertice> &grafo)
   {
     if(grafo[i].p != NULL)
     {
-      Aresta a;
+      Aresta ida, volta;
 
-      a.u = (*grafo[i].p).id;
-      a.v = grafo[i].id;
-      a.peso = grafo[i].c;
-
-      agm[i].adjacencias.push_back(a);
+      ida.u = volta.v = grafo[i].id;
+      ida.v = volta.u = grafo[i].p->id;
+      ida.peso = volta.peso = grafo[i].c;
+      
+      agm[i].adjacencias.push_back(ida);
+      //agm[grafo[i].p->id].adjacencias.push_back(volta);
     }
   }
 
@@ -221,8 +225,29 @@ vector<Vertice> AGMPrim(vector<Vertice> &grafo)
   return agm;
 }
 
+void EscreveSaidaPrim(vector<Vertice> &agm)
+{
+  ofstream arquivo;
+  arquivo.open("tree.txt");
 
-void EscreveSaidaBP(vector<Vertice*> agm)
+  for(int i=0; i < agm.size(); i++)
+  {
+    for(int e=0; e < agm[i].adjacencias.size(); e++)
+    {
+      int u = agm[i].adjacencias[e].u;
+      int v = agm[i].adjacencias[e].v;
+
+      arquivo << to_string(agm[u].x) << " " << to_string(agm[u].y) << endl;
+      arquivo << to_string(agm[v].x) << " " << to_string(agm[v].y) << endl;
+      if(e < agm[i].adjacencias.size() - 1)
+        arquivo << endl;
+    }
+  }
+
+  cout << "write prim done";
+}
+
+void EscreveSaidaBP(vector<Vertice> &agm)
 {
 
 }
