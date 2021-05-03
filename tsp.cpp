@@ -239,7 +239,8 @@ void EscreveSaidaPrim(vector<Vertice> &agm)
 
       arquivo << to_string(agm[u].x) << " " << to_string(agm[u].y) << endl;
       arquivo << to_string(agm[v].x) << " " << to_string(agm[v].y) << endl;
-      if(e < agm[i].adjacencias.size() - 1)
+
+      if(!(i == agm.size() - 1&& e == agm[i].adjacencias.size() - 1))
         arquivo << endl;
     }
   }
