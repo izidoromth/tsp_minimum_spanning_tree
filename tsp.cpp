@@ -183,7 +183,7 @@ vector<Vertice> AGMPrim(vector<Vertice> &grafo)
     for(int a = 0; a < u->adjacencias.size(); a++)
     {
       int v = u->adjacencias[a].v;
-      if(grafo[v].c > u->adjacencias[a].peso)
+      if(grafo[v].c > u->adjacencias[a].peso && grafo[v].indice_heap < heap.tamanho)
       {
         grafo[v].c = u->adjacencias[a].peso;
         grafo[v].p = u;
@@ -296,12 +296,12 @@ int Direita(int i)
 
 int Pai(int i)
 {
-  return i / 2;
+  return i % 2 == 0 ? ((i - 1) / 2) : (i / 2);
 }
 
 void Heapify(Heap &heap, int i)
 {
-  if(i > heap.tamanho)
+  if(i >= heap.tamanho || Esquerda(i) >= heap.tamanho || Direita(i) >= heap.tamanho)
     return;
 
   int menor;
