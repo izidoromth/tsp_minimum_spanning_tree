@@ -15,8 +15,6 @@ const float INFINITO = 0xEFFFFFFF;
 //variavel para indexar os vértices do grafo
 int ID = 0;
 
-//Grafo completo
-//AGM(PRIM)
 //PROFUNDIDADE
 
 class Aresta
@@ -35,9 +33,10 @@ class Vertice
   int x, y;
   int indice_heap;
   float c;
+  bool visitado;
   Vertice *p;
   vector<Aresta> adjacencias;
-  Vertice(){ id = ID++; x = 0; y = 0; c = INFINITO; p = NULL; indice_heap = -1; }
+  Vertice(){ id = ID++; x = 0; y = 0; c = INFINITO; p = NULL; indice_heap = -1; visitado = false; }
   ~Vertice(){}
 };
 
@@ -54,8 +53,10 @@ vector<Vertice> DesserializarPontos(char* nome_do_arquivo);
 void CriarArestas(vector<Vertice> &grafo);
 float DistanciaEuclidiana(Vertice v1, Vertice v2);
 vector<Vertice> AGMPrim(vector<Vertice> &grafo);
-void EscreveSaidaPrim(vector<Vertice> &agm);
-void EscreveSaidaBP(vector<Vertice> &agm);
+void TornarAGMNaoDirecionada(vector<Vertice> &agm);
+void EscreverSaidaPrim(vector<Vertice> &agm);
+void EscreverSaidaCiclo(vector<Vertice> &agm);
+void EscreverSaidaBP(vector<Vertice> &agm, int i, ofstream &arquivo);
 
 //Funcoes Heap
 void InserirHeap(Heap &heap, Vertice &v);
@@ -86,7 +87,11 @@ int main(int argc, char* argv[]) {
 
   vector<Vertice> agm = AGMPrim(grafo);
 
-  EscreveSaidaPrim(agm);
+  EscreverSaidaPrim(agm);
+
+  TornarAGMNaoDirecionada(agm);
+
+  EscreverSaidaCiclo(agm);
 
   return 0;
 }
@@ -209,23 +214,41 @@ vector<Vertice> AGMPrim(vector<Vertice> &grafo)
   {
     if(grafo[i].p != NULL)
     {
-      Aresta ida, volta;
+      Aresta ida;
 
-      ida.u = volta.v = grafo[i].id;
-      ida.v = volta.u = grafo[i].p->id;
-      ida.peso = volta.peso = grafo[i].c;
+      ida.u = grafo[i].id;
+      ida.v = grafo[i].p->id;
+      ida.peso = grafo[i].c;
       
       agm[i].adjacencias.push_back(ida);
-      //agm[grafo[i].p->id].adjacencias.push_back(volta);
     }
   }
 
-  cout << "prim done";
+  cout << "prim done\n";
 
   return agm;
 }
 
-void EscreveSaidaPrim(vector<Vertice> &agm)
+void TornarAGMNaoDirecionada(vector<Vertice> &agm)
+{
+  for(int i=0; i < agm.size(); i++)
+  {
+    for(int e=0; e < agm[i].adjacencias.size(); e++)
+    {
+      int v = agm[i].adjacencias[e].v;
+
+      Aresta volta;
+
+      volta.u = v;
+      volta.v = agm[i].id;
+      volta.peso = agm[i].adjacencias[e].peso;
+
+      agm[v].adjacencias.push_back(volta);
+    }
+  }  
+}
+
+void EscreverSaidaPrim(vector<Vertice> &agm)
 {
   ofstream arquivo;
   arquivo.open("tree.txt");
@@ -240,17 +263,41 @@ void EscreveSaidaPrim(vector<Vertice> &agm)
       arquivo << to_string(agm[u].x) << " " << to_string(agm[u].y) << endl;
       arquivo << to_string(agm[v].x) << " " << to_string(agm[v].y) << endl;
 
-      if(!(i == agm.size() - 1&& e == agm[i].adjacencias.size() - 1))
+      if(!(i == agm.size() - 1 && e == agm[i].adjacencias.size() - 1))
         arquivo << endl;
     }
   }
 
-  cout << "write prim done";
+  cout << "write prim done\n";
 }
 
-void EscreveSaidaBP(vector<Vertice> &agm)
-{
 
+void EscreverSaidaCiclo(vector<Vertice> &agm)
+{
+  ofstream arquivo;
+  arquivo.open("cycle.txt");
+
+  EscreverSaidaBP(agm, 0, arquivo);
+
+  arquivo << to_string(agm[0].x) << " " << to_string(agm[0].y) << endl;
+}
+
+void EscreverSaidaBP(vector<Vertice> &agm, int i, ofstream &arquivo)
+{  
+  agm[i].visitado = true;
+
+  arquivo << to_string(agm[i].x) << " " << to_string(agm[i].y) << endl;
+
+  for(int e=0; e < agm[i].adjacencias.size(); e++)
+  {
+    int v = agm[i].adjacencias[e].v;
+    if(!agm[v].visitado)
+    {
+      EscreverSaidaBP(agm, v, arquivo);
+    }
+  }
+
+  cout << "bp";
 }
 
 void InserirHeap(Heap &heap, Vertice &v)
