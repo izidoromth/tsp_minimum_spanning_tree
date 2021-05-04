@@ -54,6 +54,8 @@ void CriarArestas(vector<Vertice> &grafo);
 float DistanciaEuclidiana(Vertice v1, Vertice v2);
 vector<Vertice> AGMPrim(vector<Vertice> &grafo);
 void TornarAGMNaoDirecionada(vector<Vertice> &agm);
+float CalcularCustoCiclo(vector<Vertice> &agm);
+void MontarVetorVisitacaoBP(vector<Vertice> &agm, int i, vector<Vertice> &visitacao);
 void EscreverSaidaPrim(vector<Vertice> &agm);
 void EscreverSaidaCiclo(vector<Vertice> &agm);
 void EscreverSaidaBP(vector<Vertice> &agm, int i, ofstream &arquivo);
@@ -85,6 +87,10 @@ int main(int argc, char* argv[]) {
 
   CriarArestas(grafo);
 
+  clock_t t;
+    
+  t = clock();
+
   vector<Vertice> agm = AGMPrim(grafo);
 
   EscreverSaidaPrim(agm);
@@ -92,6 +98,13 @@ int main(int argc, char* argv[]) {
   TornarAGMNaoDirecionada(agm);
 
   EscreverSaidaCiclo(agm);
+
+  float custo_ciclo = CalcularCustoCiclo(agm);
+
+  t = clock() - t;
+
+  cout << fixed << setprecision(6);
+    cout << t*1.0/CLOCKS_PER_SEC << ' ' << custo_ciclo << endl;
 
   return 0;
 }
@@ -224,8 +237,6 @@ vector<Vertice> AGMPrim(vector<Vertice> &grafo)
     }
   }
 
-  cout << "prim done\n";
-
   return agm;
 }
 
@@ -248,6 +259,45 @@ void TornarAGMNaoDirecionada(vector<Vertice> &agm)
   }  
 }
 
+float CalcularCustoCiclo(vector<Vertice> &agm)
+{
+  vector<Vertice> visitacao;
+
+  for(int i = 0; i < agm.size(); i++)
+    agm[i].visitado = false;
+
+  MontarVetorVisitacaoBP(agm, 0, visitacao);
+
+  visitacao.push_back(agm[0]);
+
+  float custo = 0;
+
+  Vertice aux = visitacao[0];
+  for(int i=1; i < visitacao.size(); i++)
+  {
+    custo += DistanciaEuclidiana(aux, visitacao[i]);
+    aux = visitacao[i];
+  }
+
+  return custo;
+}
+
+void MontarVetorVisitacaoBP(vector<Vertice> &agm, int i, vector<Vertice> &visitacao)
+{
+  agm[i].visitado = true;
+
+  visitacao.push_back(agm[i]);
+
+  for(int e=0; e < agm[i].adjacencias.size(); e++)
+  {
+    int v = agm[i].adjacencias[e].v;
+    if(!agm[v].visitado)
+    {
+      MontarVetorVisitacaoBP(agm, v, visitacao);
+    }
+  }
+}
+
 void EscreverSaidaPrim(vector<Vertice> &agm)
 {
   ofstream arquivo;
@@ -263,12 +313,10 @@ void EscreverSaidaPrim(vector<Vertice> &agm)
       arquivo << to_string(agm[u].x) << " " << to_string(agm[u].y) << endl;
       arquivo << to_string(agm[v].x) << " " << to_string(agm[v].y) << endl;
 
-      if(!(i == agm.size() - 1 && e == agm[i].adjacencias.size() - 1))
-        arquivo << endl;
+      // if(!(i == agm.size() - 1 && e == agm[i].adjacencias.size() - 1))
+      //   arquivo << endl;
     }
   }
-
-  cout << "write prim done\n";
 }
 
 
@@ -296,8 +344,6 @@ void EscreverSaidaBP(vector<Vertice> &agm, int i, ofstream &arquivo)
       EscreverSaidaBP(agm, v, arquivo);
     }
   }
-
-  cout << "bp";
 }
 
 void InserirHeap(Heap &heap, Vertice &v)
