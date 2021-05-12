@@ -140,7 +140,11 @@ int main(int argc, char* argv[]) {
   return 0;
 }
 
-//Desserializa os pontos do arquivo de entrada em vértices e inicializa o grafo
+/*A função "DesserializarPontos" extrai pontos serializados de um arquivo de 
+entrada e converte em um objeto, se o arquivo existir ele obtem o numero de 
+pontos do grafo e armazena na variável "num_pontos". Para i < 0 até i < num_pontos, 
+(portanto O(n)) ela cria os vertices e atribui o valor nas coordenadas x e y deles 
+e os adiciona no fim do vetor "grafo". A função retorna o vetor.*/
 vector<Vertice> DesserializarPontos(char* nome_do_arquivo)
 {
     ifstream arquivo;
@@ -185,7 +189,14 @@ vector<Vertice> DesserializarPontos(char* nome_do_arquivo)
     return grafo;
 }
 
-//Inicializa arestas entre todos os vértices existentes criando um grafo completo
+/*A função "CriarArestas" percorre todos os vertices do grafo e cria uma aresta
+entre todos eles, por exemplo, se temos os vertices A, B e C, ele vai pegar o A
+e criar uma aresta de ida e volta pro B e uma aresta de ida e volta pro C, vai 
+pegar o B e criar uma aresta de ida e volta pro A (que ja existe) e uma aresta
+de ida e volta pro C e vai pegar o C e fazer a mesma coisa, criando um grafo completo.
+Como numa mesma iteração já são criadas as arestas de ida e volta entre v e u,
+são realizada n(n-1)/2 iterações, portanto esta função possui complexidade O(n²)
+O peso das arestas é a distancia euclidiana entre os vertices e a função retorna o vetor.*/
 void CriarArestas(vector<Vertice> &grafo)
 {
   for(int i = 0; i < grafo.size(); i++)
@@ -345,6 +356,9 @@ vector<Vertice> AGMPrim(vector<Vertice> &grafo)
   return agm;
 }
 
+/*A função "TornarAGMNaoDirecionada" recebe um grafo e, para cada vertice,
+verifica os seus vizinhos (ou seja, adjacências). Para cada adjacente ele
+cria uma aresta nova que vai apontar de volta para esse vertice.*/
 void TornarAGMNaoDirecionada(vector<Vertice> &agm)
 {
   for(int i=0; i < agm.size(); i++)
