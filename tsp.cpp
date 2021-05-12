@@ -108,6 +108,7 @@ int main(int argc, char* argv[]) {
       return -1;
   }
 
+  /*Retorna a lista de vértices extraídos do arquivo "input.txt"*/
   vector<Vertice> grafo = DesserializarPontos(argv[1]);
   
   if(grafo.size() == 0)
@@ -116,23 +117,44 @@ int main(int argc, char* argv[]) {
       return -1;
   }
 
+  /*Cria arestas entre todos os vértices e todos os vértices extraídos
+  do arquivo de entrada. Esta operação tem custo O(n²) e não têm seu
+  tempo computado no custo final do algoritmo pois o objetivo é verificar
+  o funcionamento do método de aproximação do ciclo hamiltoniano*/
   CriarArestas(grafo);
 
   clock_t t;
     
   t = clock();
 
+  /*Primeira e principal etapa da aproximação do ciclo hamiltoniano
+  Custo: O(mlgn)*/
   vector<Vertice> agm = AGMPrim(grafo);
 
+  /*Escreve o arquivo "tree.txt" que contém a árvore geradora mínima
+  computado pelo algoritmo prim
+  Custo: O(n+m)*/
   EscreverSaidaPrim(agm);
 
+  /*Faz com que a árvore geradora mínima possua vértices de ida e volta
+  entre os pais e filhos calculados originalmente pelo prim.
+  Custo: O(n+m)*/
   TornarAGMNaoDirecionada(agm);
 
+  /*Realiza a busca em profundidade na árvore geradora mínima computando
+  a ordem do ciclo hamiltoniano de aproximação
+  Custo: O(n+m)*/
   EscreverSaidaCiclo(agm);
 
+  /*Calcula o custo total do ciclo computado
+  Custo: O(n+1)*/
   float custo_ciclo = CalcularCustoCiclo(agm);
 
   t = clock() - t;
+
+  /*O custo total do algoritmo de aproximação do ciclo hamiltoniano
+  é limitado superiormente pela função de Prim que possui custo O(mlgn)
+  Portanto o custo total: O(mlgn)*/
 
   cout << fixed << setprecision(6);
     cout << t*1.0/CLOCKS_PER_SEC << ' ' << custo_ciclo << endl;
@@ -378,92 +400,98 @@ void TornarAGMNaoDirecionada(vector<Vertice> &agm)
   }  
 }
 
+/*Calcula a soma total dos pesos das arestas presentes do ciclo
+Entrada: grafo da árvore geradora mínima obtida no Prim*/
 float CalcularCustoCiclo(vector<Vertice> &agm)
 {
-  vector<Vertice> visitacao;
+  vector<Vertice> visitacao; /*-----------------------------O(1) Inica o vetor de vertices "visitacao"*/
 
-  for(int i = 0; i < agm.size(); i++)
-    agm[i].visitado = false;
+  for(int i = 0; i < agm.size(); i++) /*--------------------O(n) Percorre os nós da AGM*/
+    agm[i].visitado = false; /*-----------------------------O(1) Atribui falso ao bool visitado dos nós da AGM*/
 
-  MontarVetorVisitacaoBP(agm, 0, visitacao);
+  MontarVetorVisitacaoBP(agm, 0, visitacao); /*-----------------*/
 
-  visitacao.push_back(agm[0]);
+  visitacao.push_back(agm[0]); /*---------------------------O(1) Adiciona ao final de visitacao o primeiro vertice da agm*/
 
-  float custo = 0;
+  float custo = 0; /*---------------------------------------O(1) Inicia o custo do ciclo*/
 
-  Vertice aux = visitacao[0];
-  for(int i=1; i < visitacao.size(); i++)
+  Vertice aux = visitacao[0]; /*----------------------------O(1) aux recebe o primeiro vértice do vetor visitacao*/
+  for(int i=1; i < visitacao.size(); i++) /*----------------O(n-1) percorre todos os vértices (menos o primeiro) presentes no vetor visitacao */
   {
-    custo += DistanciaEuclidiana(aux, visitacao[i]);
-    aux = visitacao[i];
+    custo += DistanciaEuclidiana(aux, visitacao[i]); /*-----Distacia euclidiana entre o vértice atribuído a aux e o próximo nó visitado em relação a aux*/
+    aux = visitacao[i]; /*----------------------------------O(1) atribui a aux o próximo nó visitado*/
   }
 
-  return custo;
+  return custo; /*------------------------------------------O(1) retorna o custo total do ciclo */
 }
 
+/*Retorna o vetor com a ordem de visitacao dos nos da AGM pelo metodo da Busca em Profundidade*/
 void MontarVetorVisitacaoBP(vector<Vertice> &agm, int i, vector<Vertice> &visitacao)
 {
-  agm[i].visitado = true;
+  agm[i].visitado = true; /*-------------------------------------O(1) Posicao na arvore recebe Visitado = True*/
 
-  visitacao.push_back(agm[i]);
+  visitacao.push_back(agm[i]); /*--------------------------------O(1) Insere vertice visitado da agm no vetor final do vetor visitacao*/
 
-  for(int e=0; e < agm[i].adjacencias.size(); e++)
+  for(int e=0; e < agm[i].adjacencias.size(); e++) /*------------O(m) Executa  uma vez para cada nó no vetor de adjacencias da agm*/
   {
-    int v = agm[i].adjacencias[e].v;
-    if(!agm[v].visitado)
+    int v = agm[i].adjacencias[e].v; /*--------------------------O(1) V recebe o valor do nó v da aresta uv*/
+    if(!agm[v].visitado) /*--------------------------------------O(1) Se o nó v não tiver sido visitado chama a funcao MontarVetorVisitacaoBP para o nó v*/
     {
-      MontarVetorVisitacaoBP(agm, v, visitacao);
+      MontarVetorVisitacaoBP(agm, v, visitacao); /*--------------O(1)*/
     }
   }
-}
+} /*-------------------------------------------------------------Total da recursão O(n+m)*/
 
+/*Escreve a AGM resultante em um arquivo txt "tree.txt"*/
 void EscreverSaidaPrim(vector<Vertice> &agm)
 {
-  ofstream arquivo;
-  arquivo.open("tree.txt");
+  ofstream arquivo; /*------------------------------------------------------------O(1)*/
+  arquivo.open("tree.txt"); /*----------------------------------------------------O(1) abre o arquivo "tree.txt"*/
 
-  for(int i=0; i < agm.size(); i++)
+  for(int i=0; i < agm.size(); i++) /*--------------------------------------------O(n), numero de nos da AGM*/
   {
-    for(int e=0; e < agm[i].adjacencias.size(); e++)
+    for(int e=0; e < agm[i].adjacencias.size(); e++) /*---------------------------O(m), numero de arestas ligadas ao nó da AGM */
     {
-      int u = agm[i].adjacencias[e].u;
-      int v = agm[i].adjacencias[e].v;
+      int u = agm[i].adjacencias[e].u; /*-----------------------------------------O(1) atribui o nó adjacente a u*/
+      int v = agm[i].adjacencias[e].v; /*-----------------------------------------O(1) atribui o nó adjacente a v*/
 
-      arquivo << to_string(agm[u].x) << " " << to_string(agm[u].y) << endl;
-      arquivo << to_string(agm[v].x) << " " << to_string(agm[v].y) << endl;
+      arquivo << to_string(agm[u].x) << " " << to_string(agm[u].y) << endl; /*----O(1) escreve o vértice u no arquivo "tree.txt"*/
+      arquivo << to_string(agm[v].x) << " " << to_string(agm[v].y) << endl; /*----O(1) escreve o vértice v no arquivo "tree.txt"*/
 
-      // if(!(i == agm.size() - 1 && e == agm[i].adjacencias.size() - 1))
-      //   arquivo << endl;
+      // if(!(i == agm.size() - 1 && e == agm[i].adjacencias.size() - 1))  /*------O(1)*/
+      //   arquivo << endl;  /*----------------------------------------------------O(1)*/
     }
   }
-}
+} /*------------------------------------------------------------------------------Total O(n+m)*/
 
-
+/*Abre o arquivo txt "cycle.txt", chama a funcao EscreverSaidaBP e escreve
+no arquivo onó inicial e final no arquivo de texto*/
 void EscreverSaidaCiclo(vector<Vertice> &agm)
 {
-  ofstream arquivo;
-  arquivo.open("cycle.txt");
+  ofstream arquivo; /*-----------------------------------------------------------O(1)*/
+  arquivo.open("cycle.txt"); /*--------------------------------------------------O(1) Abro o arquivo "cycle.txt"*/
 
-  EscreverSaidaBP(agm, 0, arquivo);
+  EscreverSaidaBP(agm, 0, arquivo); /*-------------------------------------------O(n+m) */
 
-  arquivo << to_string(agm[0].x) << " " << to_string(agm[0].y) << endl;
+  arquivo << to_string(agm[0].x) << " " << to_string(agm[0].y) << endl; /*-------O(1) Escreve o nó inicial e final do ciclo no arquivo "cycle.txt"*/
 }
 
-void EscreverSaidaBP(vector<Vertice> &agm, int i, ofstream &arquivo)
+/*Executa a Busca em Profundidade na AGM e o resultado no arquivo "cycle.txt"*/
+void EscreverSaidaBP(vector<Vertice> &agm, int i, ofstream &arquivo) 
 {  
-  agm[i].visitado = true;
+  agm[i].visitado = true; /*-----------------------------------------------------O(1)   Indica que o agm[i] foi visitado*/
 
-  arquivo << to_string(agm[i].x) << " " << to_string(agm[i].y) << endl;
+  arquivo << to_string(agm[i].x) << " " << to_string(agm[i].y) << endl; /*-------O(1)   Escreve o no visitado no arquivo "cycle.txt"*/
 
-  for(int e=0; e < agm[i].adjacencias.size(); e++)
+  for(int e=0; e < agm[i].adjacencias.size(); e++) /*----------------------------O(m)  Percorre os nós adjacentes ao nó visitado */
   {
-    int v = agm[i].adjacencias[e].v;
-    if(!agm[v].visitado)
+    int v = agm[i].adjacencias[e].v; /*------------------------------------------O(1)  Atribui o nó adjacente a variável v*/
+    if(!agm[v].visitado) /*------------------------------------------------------O(1)  Se o nó adjacente não tiver sido visitado, ele chama o metodo EscreverSaidaBP para o nó aidna não visitado*/
     {
-      EscreverSaidaBP(agm, v, arquivo);
+      EscreverSaidaBP(agm, v, arquivo); /*---------------------------------------O(m)*/
     }
   }
-}
+} /*-----------------------------------------------------------------------------O(n+m) n+m pois passa por todos os nós e todas as arestas para executar a busca em profundidade*/
 
 /*Função utilizada para incluir um vértice ao heap de
 armazenamento dos custos que levam ao corte.
